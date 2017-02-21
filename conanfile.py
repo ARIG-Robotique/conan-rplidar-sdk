@@ -1,6 +1,7 @@
-from conans import ConanFile
+from conans import ConanFile, CMake
 from conans.tools import download, unzip, check_sha1
 import os
+import shutil
 
 class RPLidarSDKConan(ConanFile):
     name = "RPLidarSDK"
@@ -8,6 +9,7 @@ class RPLidarSDKConan(ConanFile):
     url = "https://github.com/ARIG-Robotique/conan-rplidar-sdk"
     description = "RPLidar SDK driver for Slamtech / RobotPeak lidar device"
     settings = "os", "compiler", "build_type", "arch"
+    exports = "CMakeLists.txt"
 
     FOLDER_NAME = 'rplidar_sdk_v%s' % version
 
@@ -18,17 +20,21 @@ class RPLidarSDKConan(ConanFile):
         unzip(tarball_name, self.FOLDER_NAME)
         os.unlink(tarball_name)
 
+        shutil.move("CMakeLists.txt", "%s/sdk/sdk/CMakeLists.txt" % self.FOLDER_NAME)
+
     def build(self):
-        cmd = 'make -C %s/%s/sdk/sdk' % (self.conanfile_directory, self.FOLDER_NAME)
-        self.output.info('Running Make: ' + cmd)
+        cmake = CMake(self.settings)
+        cmd = 'cmake %s/%s/sdk/sdk %s' % (self.conanfile_directory, self.FOLDER_NAME, cmake.command_line)
+        self.output.info('Running CMake: ' + cmd)
         self.run(cmd)
+        self.run("cmake --build . %s" % cmake.build_config)
 
     def package(self):
         self.copy("*.h", dst="include", src="%s/sdk/sdk/include" % (self.FOLDER_NAME))
         if self.settings.os == "Windows":
             self.copy(pattern="*.lib", dst="lib", src="lib", keep_path=False)
         else:
-            self.copy(pattern="*.a", dst="lib", src="%s/sdk/output/Linux/Release" % (self.FOLDER_NAME), keep_path=False)
+            self.copy(pattern="*.a", dst="lib", keep_path=False)
 
     def package_info(self):
         self.cpp_info.libs = ['rplidar_sdk']

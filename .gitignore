@@ -1,0 +1,9 @@
+# IDE
+.idea/
+*.iml
+
+# Python compiled
+*.pyc
+
+# Build
+test/build/
