@@ -11,10 +11,9 @@ if (UNIX AND NOT APPLE)
   set(ARCH_DIR "linux")
 elseif (UNIX AND APPLE)
   set(ARCH_DIR "macOS")
-elseif (WIN32)
-  set(ARCH_DIR "win32")
+  add_definitions(-D_MACOS)
 else()
-  message(FATAL_ERROR "Arch OS is not found")
+  message(FATAL_ERROR "Arch OS is not valid")
 endif()
 
 #====================================================================#
